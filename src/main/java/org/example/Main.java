@@ -21,6 +21,8 @@ public class Main {
             System.out.println("2. Play (Redis)");
             System.out.println("3. Generate (HashMap)");
             System.out.println("4. Play (HashMap)");
+            System.out.println("5. Generate (Redis Runnable)");
+            System.out.println("6. Play (Redis Runnable)");
             System.out.println("0. Exit");
 
             int choice = scanner.nextInt();
@@ -38,6 +40,23 @@ public class Main {
                 case 4:
                     playWithHashMap(ticketsMap);
                     break;
+                case 5:
+                    System.out.println("Enter the number of tickets to generate:");
+                    int quantity = scanner.nextInt();
+                    long startTime = System.nanoTime();
+                    TicketGeneratorRunnable generatorRunnable = new TicketGeneratorRunnable(quantity, redisService, gson);
+                    Thread generatorThread = new Thread(generatorRunnable);
+                    generatorThread.start();
+                    try {
+                        generatorThread.join();
+                    } catch (InterruptedException e) {
+                        System.out.println("Thread " + Thread.currentThread().getName() + " was interrupted.");
+                    }
+                    System.out.println("Generatig and saving to Redis (using Threads) took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
+                    break;
+                case 6:
+                    playRunnable(redisService, gson);
+                    break;
                 case 0:
                     System.out.println("Program ending.");
                     running = false;
@@ -49,6 +68,7 @@ public class Main {
         scanner.close();
 
     }
+
 
     public static void generate(Scanner scanner, RedisService redisService, Gson gson) {
         System.out.println("Generating...");
@@ -68,6 +88,7 @@ public class Main {
         System.out.println("Generatig and saving to Radis took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
     }
 
+
     public static void generateWithHashMap(Scanner scanner, HashMap<String, int[]> ticketsMap) {
         System.out.println("Generating...");
         System.out.println("Enter the number of tickets to generate:");
@@ -82,6 +103,7 @@ public class Main {
         }
         System.out.println("Generatig and saving to HashMap took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
     }
+
 
     public static void play(RedisService redisService, Gson gson) {
         System.out.println("Playing...");
@@ -109,8 +131,9 @@ public class Main {
                 System.out.println("Prize: " + (prize > 0 ? prize + " EUR" : "No prize") + "\n");
             }
         }
-        System.out.println("Generatig and saving to Radis took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
+        System.out.println("Play from Radis took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
     }
+
 
     public static void playWithHashMap(HashMap<String, int[]> ticketsMap) {
         System.out.println("Playing...");
@@ -128,8 +151,53 @@ public class Main {
             System.out.println("Matching numbers: " + matchingNumbers);
             System.out.println("Prize: " + (prize > 0 ? prize + " EUR" : "No prize") + "\n");
         }
-        System.out.println("Generatig and saving to HashMap took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
+        System.out.println("Play from HashMap took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
     }
+
+
+    public static void playRunnable(RedisService redisService, Gson gson) {
+        long startTime = System.nanoTime();
+        int portionNumber = 5;
+        Set<String> keys = redisService.getKeys();
+        if (keys.isEmpty()) {
+            System.out.println("No tickets found in Redis.");
+            return;
+        }
+
+        // Define the size of each subset
+        int subsetSize = keys.size() / portionNumber;
+
+        List<Set<String>> listOfSets = new ArrayList<>();
+        Iterator<String> iterator = keys.iterator();
+
+        // Split the set into portionNumber sets
+        for (int i = 0; i < portionNumber; i++) {
+            Set<String> subset = new HashSet<>();
+            while (iterator.hasNext() && subset.size() < subsetSize) {
+                subset.add(iterator.next());
+            }
+            listOfSets.add(subset);
+        }
+
+        // Thread for each portion
+        List<Thread> threads = new ArrayList<>();
+        for (Set<String> keySubset : listOfSets) {
+            TicketsPlayRunnable checkTask = new TicketsPlayRunnable(redisService, gson, keySubset);
+            Thread playRunnableThread = new Thread(checkTask);
+            playRunnableThread.start();
+            threads.add(playRunnableThread);
+        }
+
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                System.out.println("Thread " + Thread.currentThread().getName() + " was interrupted.");
+            }
+        }
+        System.out.println("Play from Redis (using Threads) took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
+    }
+
 
     public static String generateUUID() {
         UUID uuid = UUID.randomUUID();

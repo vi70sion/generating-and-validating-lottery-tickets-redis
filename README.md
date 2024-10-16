@@ -39,21 +39,33 @@ Vartotojas įveda: 3 bilietai.
 Sugeneruojami ir saugomi trys bilietai Redis:
 
 UUID: a1b2c3d4-e5f6-7g8h-9i0j Skaičiai: [5, 10, 22, 30, 33]
+
 UUID: b2c3d4e5-f6g7-8h9i-0j1k Skaičiai: [1, 6, 19, 24, 32]
+
 UUID: c3d4e5f6-g7h8-9i0j-1k2l Skaičiai: [8, 14, 23, 28, 35]
 
 Žaisti:
 
 Sugeneruojami laimingi skaičiai: [5, 10, 19, 24, 30].
+
 Programa patikrina visus bilietus ir išveda rezultatą:
+
 Bilietas UUID: a1b2c3d4-e5f6-7g8h-9i0j atitiko 4 skaičius. Laimėta suma: 500 EUR.
+
 Bilietas UUID: b2c3d4e5-f6g7-8h9i-0j1k atitiko 3 skaičius. Laimėta suma: 15 EUR.
+
 Bilietas UUID: c3d4e5f6-g7h8-9i0j-1k2l atitiko 0 skaičius. Laimėjimo nėra.
+
 Užduoties struktūra:
+
 Pagrindinė programa su meniu: Programa turi paprašyti vartotojo pasirinkti tarp dviejų veiksmų: „Generuoti tiražą“ arba „Žaisti“.
 Bilietų generavimas: Vartotojas įveda bilietų kiekį, sugeneruojami atsitiktiniai bilietai ir jie saugomi Redis.
 Žaidimas: Sugeneruojami laimingi skaičiai ir kiekvienas bilietas tikrinamas prieš šiuos skaičius, atspausdinamas laimėjimo rezultatas.
+
 Techninės detalės:
+
 Naudoti „Redis“ ir „Jedis“ biblioteką „Java“ programoje bilietams saugoti ir gauti.
+
 Naudoti UUID generuoti unikaliems bilietų ID.
+
 Bilietai turėtų būti saugomi „Redis“ JSON formatu arba kaip sąrašas.

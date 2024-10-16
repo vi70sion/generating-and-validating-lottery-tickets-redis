@@ -9,14 +9,18 @@ public class Main {
         RedisService redisService = new RedisService("localhost", 6379);
         Gson gson = new Gson();
 
+        HashMap<String, int[]> ticketsMap = new HashMap<>();
+
         Scanner scanner = new Scanner(System.in);
         boolean running = true;
 
         while (running) {
             System.out.println();
             System.out.println("Select an action:");
-            System.out.println("1. Generate");
-            System.out.println("2. Play");
+            System.out.println("1. Generate (Redis)");
+            System.out.println("2. Play (Redis)");
+            System.out.println("3. Generate (HashMap)");
+            System.out.println("4. Play (HashMap)");
             System.out.println("0. Exit");
 
             int choice = scanner.nextInt();
@@ -27,6 +31,12 @@ public class Main {
                     break;
                 case 2:
                     play(redisService, gson);
+                    break;
+                case 3:
+                    generateWithHashMap(scanner, ticketsMap);
+                    break;
+                case 4:
+                    playWithHashMap(ticketsMap);
                     break;
                 case 0:
                     System.out.println("Program ending.");
@@ -44,6 +54,7 @@ public class Main {
         System.out.println("Generating...");
         System.out.println("Enter the number of tickets to generate:");
         int quantity = scanner.nextInt();
+        long startTime = System.nanoTime();
         for (int i = 0; i < quantity; i++) {
             String genUUID = generateUUID();
             int[] randomNumbers = generateRandomNumbers();
@@ -54,10 +65,27 @@ public class Main {
 
             redisService.put("TicketNumbers_" + genUUID, numbersAsJson);
         }
+        System.out.println("Generatig and saving to Radis took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
+    }
+
+    public static void generateWithHashMap(Scanner scanner, HashMap<String, int[]> ticketsMap) {
+        System.out.println("Generating...");
+        System.out.println("Enter the number of tickets to generate:");
+        int quantity = scanner.nextInt();
+        long startTime = System.nanoTime();
+        for (int i = 0; i < quantity; i++) {
+            String genUUID = generateUUID();
+            int[] randomNumbers = generateRandomNumbers();
+            ticketsMap.put("TicketNumbers_" + genUUID, randomNumbers);
+            System.out.println("Generated ticket UUID: " + genUUID);
+            System.out.println("Random numbers: " + Arrays.toString(randomNumbers));
+        }
+        System.out.println("Generatig and saving to HashMap took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
     }
 
     public static void play(RedisService redisService, Gson gson) {
         System.out.println("Playing...");
+        long startTime = System.nanoTime();
         int[] luckyNumbers = generateRandomNumbers();
         System.out.println("Lucky numbers: " + Arrays.toString(luckyNumbers));
         System.out.println();
@@ -81,8 +109,26 @@ public class Main {
                 System.out.println("Prize: " + (prize > 0 ? prize + " EUR" : "No prize") + "\n");
             }
         }
+        System.out.println("Generatig and saving to Radis took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
+    }
 
+    public static void playWithHashMap(HashMap<String, int[]> ticketsMap) {
+        System.out.println("Playing...");
+        long startTime = System.nanoTime();
+        int[] luckyNumbers = generateRandomNumbers();
+        System.out.println("Lucky numbers: " + Arrays.toString(luckyNumbers));
+        System.out.println();
 
+        for (String key : ticketsMap.keySet()) {
+            int[] ticketNumbers = ticketsMap.get(key);
+            int matchingNumbers = countMatchingNumbers(luckyNumbers, ticketNumbers);
+            double prize = calculatePrize(matchingNumbers);
+            System.out.println("Ticket UUID: " + key);
+            System.out.println("Ticket numbers: " + Arrays.toString(ticketNumbers));
+            System.out.println("Matching numbers: " + matchingNumbers);
+            System.out.println("Prize: " + (prize > 0 ? prize + " EUR" : "No prize") + "\n");
+        }
+        System.out.println("Generatig and saving to HashMap took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
     }
 
     public static String generateUUID() {

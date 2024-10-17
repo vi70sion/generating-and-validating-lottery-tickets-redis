@@ -69,3 +69,12 @@ Naudoti „Redis“ ir „Jedis“ biblioteką „Java“ programoje bilietams s
 Naudoti UUID generuoti unikaliems bilietų ID.
 
 Bilietai turėtų būti saugomi „Redis“ JSON formatu arba kaip sąrašas.
+
+Sukurti analogišką funkcionalumą naudojant HashMap (uuid, int array/list).
+Padaryti greičio matavimą bilietų generavimui ir bilietų tikrinimui atskirai (pradžioje užfiksuojame laiką ir atlikę veiksmus atimame pradžios laiką iš dabarties)
+
+Sukurti Runnable kuris priimtų penktadalį Set<String> ir atliktų tikrinimą su Redis taip pat sukurti Runnable kuris generuotų bilietus
+
+Sukurti tą patį funkcionalumą naudojant MySQL duomenų bazę
+
+Sukurti tą patį funkcionalumą naudojant RabbitMQ, jog bilietai būtų įkeliami kaip žinutės.

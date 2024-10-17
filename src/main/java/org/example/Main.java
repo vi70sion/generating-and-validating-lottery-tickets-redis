@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import java.util.*;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
 
         RedisService redisService = new RedisService("localhost", 6379);
         Gson gson = new Gson();
@@ -23,6 +23,8 @@ public class Main {
             System.out.println("4. Play (HashMap)");
             System.out.println("5. Generate (Redis Runnable)");
             System.out.println("6. Play (Redis Runnable)");
+            System.out.println("7. Generate (MySQL Runnable)");
+            System.out.println("8. Play (MySQL Runnable)");
             System.out.println("0. Exit");
 
             int choice = scanner.nextInt();
@@ -56,6 +58,12 @@ public class Main {
                     break;
                 case 6:
                     playRunnable(redisService, gson);
+                    break;
+                case 7:
+                    generateWithMySQLRunnable(scanner, gson);
+                    break;
+                case 8:
+                    playWithMySQLRunnable(gson);
                     break;
                 case 0:
                     System.out.println("Program ending.");
@@ -199,6 +207,42 @@ public class Main {
     }
 
 
+    public static void generateWithMySQLRunnable(Scanner scanner, Gson gson) {
+        System.out.println("Enter the number of tickets to generate:");
+        int quantity = scanner.nextInt();
+        long startTime = System.nanoTime();
+        TicketGeneratorMySQLRunnable taskProcessorRunnable = new TicketGeneratorMySQLRunnable(quantity, gson);
+        Thread generatorThread = new Thread(taskProcessorRunnable);
+        generatorThread.start();
+        try {
+            generatorThread.join();
+        } catch (InterruptedException e) {
+            System.out.println("Thread " + Thread.currentThread().getName() + " was interrupted.");
+        }
+        System.out.println("Generatig and saving to MySQL DB (using Threads) took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
+
+    }
+
+
+    public static void playWithMySQLRunnable(Gson gson) throws InterruptedException {
+        System.out.println("Playing...");
+        long startTime = System.nanoTime();
+        int[] luckyNumbers = generateRandomNumbers();
+        System.out.println("Lucky numbers: " + Arrays.toString(luckyNumbers));
+        System.out.println();
+
+        TicketPlayMySQLRunnable checkMySQLTask1 = new TicketPlayMySQLRunnable(gson, luckyNumbers);
+        TicketPlayMySQLRunnable checkMySQLTask2 = new TicketPlayMySQLRunnable(gson, luckyNumbers);
+        Thread playMySQLThread1 = new Thread(checkMySQLTask1);
+        Thread playMySQLThread2 = new Thread(checkMySQLTask2);
+        playMySQLThread1.start();
+        playMySQLThread2.start();
+        playMySQLThread1.join();
+        playMySQLThread2.join();
+        System.out.println("Play with MySQL took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
+    }
+
+
     public static String generateUUID() {
         UUID uuid = UUID.randomUUID();
         return uuid.toString();
@@ -244,5 +288,6 @@ public class Main {
                 return 0;
         }
     }
+
 
 }

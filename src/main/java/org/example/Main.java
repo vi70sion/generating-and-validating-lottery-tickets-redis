@@ -1,12 +1,16 @@
 package org.example;
 
 import com.google.gson.Gson;
+import org.example.service.RabbitMQService;
+import org.example.service.RedisService;
 import java.util.*;
 
 public class Main {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws Exception {
 
         RedisService redisService = new RedisService("localhost", 6379);
+        RabbitMQService rabbitMQService = new RabbitMQService();
+
         Gson gson = new Gson();
 
         HashMap<String, int[]> ticketsMap = new HashMap<>();
@@ -25,6 +29,8 @@ public class Main {
             System.out.println("6. Play (Redis Runnable)");
             System.out.println("7. Generate (MySQL Runnable)");
             System.out.println("8. Play (MySQL Runnable)");
+            System.out.println("9. Generate (RabbitMQ)");
+            System.out.println("10. Play (RabbitMQ)");
             System.out.println("0. Exit");
 
             int choice = scanner.nextInt();
@@ -43,18 +49,7 @@ public class Main {
                     playWithHashMap(ticketsMap);
                     break;
                 case 5:
-                    System.out.println("Enter the number of tickets to generate:");
-                    int quantity = scanner.nextInt();
-                    long startTime = System.nanoTime();
-                    TicketGeneratorRunnable generatorRunnable = new TicketGeneratorRunnable(quantity, redisService, gson);
-                    Thread generatorThread = new Thread(generatorRunnable);
-                    generatorThread.start();
-                    try {
-                        generatorThread.join();
-                    } catch (InterruptedException e) {
-                        System.out.println("Thread " + Thread.currentThread().getName() + " was interrupted.");
-                    }
-                    System.out.println("Generatig and saving to Redis (using Threads) took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
+                    generateWithRedisRunnable(scanner, redisService, gson);
                     break;
                 case 6:
                     playRunnable(redisService, gson);
@@ -64,6 +59,12 @@ public class Main {
                     break;
                 case 8:
                     playWithMySQLRunnable(gson);
+                    break;
+                case 9:
+                    generateWithRabbitMQ(scanner, rabbitMQService, gson);
+                    break;
+                case 10:
+                    playWithRabbitMQ(scanner, rabbitMQService, gson);
                     break;
                 case 0:
                     System.out.println("Program ending.");
@@ -163,6 +164,23 @@ public class Main {
     }
 
 
+    public static void generateWithRedisRunnable(Scanner scanner, RedisService redisService, Gson gson) {
+        System.out.println("Enter the number of tickets to generate:");
+        int quantity = scanner.nextInt();
+        long startTime = System.nanoTime();
+        TicketGeneratorRunnable generatorRunnable = new TicketGeneratorRunnable(quantity, redisService, gson);
+        Thread generatorThread = new Thread(generatorRunnable);
+        generatorThread.start();
+        try {
+            generatorThread.join();
+        } catch (InterruptedException e) {
+            System.out.println("Thread " + Thread.currentThread().getName() + " was interrupted.");
+        }
+        System.out.println("Generatig and saving to Redis (using Threads) took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
+
+    }
+
+
     public static void playRunnable(RedisService redisService, Gson gson) {
         long startTime = System.nanoTime();
         int portionNumber = 5;
@@ -240,6 +258,36 @@ public class Main {
         playMySQLThread1.join();
         playMySQLThread2.join();
         System.out.println("Play with MySQL took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
+    }
+
+
+    public static void generateWithRabbitMQ(Scanner scanner, RabbitMQService rabbitMQService, Gson gson) {
+        System.out.println("Enter the number of tickets to generate:");
+        int quantity = scanner.nextInt();
+        long startTime = System.nanoTime();
+        TicketsGeneratorRabbitRunnable generatorRabbitRunnable = new TicketsGeneratorRabbitRunnable(quantity, rabbitMQService, gson);
+        Thread generatorThread = new Thread(generatorRabbitRunnable);
+        generatorThread.start();
+        try {
+            generatorThread.join();
+        } catch (InterruptedException e) {
+            System.out.println("Thread " + Thread.currentThread().getName() + " was interrupted.");
+        }
+        System.out.println("Generatig and saving to RabbitMQ took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
+
+    }
+
+
+    public static void playWithRabbitMQ(Scanner scanner, RabbitMQService rabbitMQService, Gson gson) throws Exception {
+        System.out.println("Playing...");
+        long startTime = System.nanoTime();
+        int[] luckyNumbers = generateRandomNumbers();
+        System.out.println("Lucky numbers: " + Arrays.toString(luckyNumbers));
+        System.out.println();
+        rabbitMQService.receiveAndProcessOneMessageAtATime("tickets_queue", luckyNumbers);
+
+        System.out.println("Play with RabbitMQ took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
+
     }
 
 

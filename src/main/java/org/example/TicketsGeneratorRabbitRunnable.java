@@ -1,17 +1,18 @@
 package org.example;
 
 import com.google.gson.Gson;
-import org.example.service.RedisService;
+import org.example.model.Ticket;
+import org.example.service.RabbitMQService;
 
-public class TicketGeneratorRunnable implements Runnable{
+public class TicketsGeneratorRabbitRunnable implements Runnable{
 
+    RabbitMQService rabbitMQService;
     private final int quantity;
-    private final RedisService redisService;
     private final Gson gson;
 
-    public TicketGeneratorRunnable(int quantity, RedisService redisService, Gson gson) {
+    public TicketsGeneratorRabbitRunnable(int quantity, RabbitMQService rabbitMQService, Gson gson) {
         this.quantity = quantity;
-        this.redisService = redisService;
+        this.rabbitMQService = rabbitMQService;
         this.gson = gson;
     }
 
@@ -23,7 +24,13 @@ public class TicketGeneratorRunnable implements Runnable{
             String numbersAsJson = gson.toJson(randomNumbers);
             System.out.println(Thread.currentThread().getName() + " Generated ticket UUID: " + genUUID);
             System.out.println("Random numbers (JSON): " + numbersAsJson);
-            redisService.put("TicketNumbers_" + genUUID, numbersAsJson);
+            try {
+                rabbitMQService.sendObjectToQueue(new Ticket(genUUID, randomNumbers));
+            } catch (Exception e) {
+                System.out.println("Error.");;
+            }
         }
     }
+
+
 }

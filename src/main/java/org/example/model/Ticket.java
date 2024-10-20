@@ -6,6 +6,9 @@ public class Ticket {
     private String uuidCode;
     private int[] numbers;
 
+    public Ticket() {
+    }
+
     public Ticket(String uuidCode, int[] numbers) {
         this.uuidCode = uuidCode;
         this.numbers = numbers;

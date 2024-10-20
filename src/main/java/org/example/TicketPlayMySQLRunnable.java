@@ -28,10 +28,10 @@ public class TicketPlayMySQLRunnable implements Runnable{
                     ticketMap.putIfAbsent(ticket.getUuidCode(),ticket.getNumbers());
                     int matchingNumbers = Main.countMatchingNumbers(luckyNumbers, ticket.getNumbers());
                     double prize = Main.calculatePrize(matchingNumbers);
-//                    System.out.println(Thread.currentThread().getName() + "- Ticket UUID: " + ticket.getUuidCode());
-//                    System.out.println("Ticket numbers: " + Arrays.toString(ticket.getNumbers()));
-//                    System.out.println("Matching numbers: " + matchingNumbers);
-//                    System.out.println("Prize: " + (prize > 0 ? prize + " EUR" : "No prize") + "\n");
+                    System.out.println(Thread.currentThread().getName() + "- Ticket UUID: " + ticket.getUuidCode());
+                    System.out.println("Ticket numbers: " + Arrays.toString(ticket.getNumbers()));
+                    System.out.println("Matching numbers: " + matchingNumbers);
+                    System.out.println("Prize: " + (prize > 0 ? prize + " EUR" : "No prize") + "\n");
 
                     ticketsRepository.updateTicket(ticket);
                     ticketMap.remove(ticket.getUuidCode());

@@ -21,8 +21,8 @@ public class TicketGeneratorMySQLRunnable implements Runnable{
             int[] randomNumbers = Main.generateRandomNumbers();
             Ticket ticket = new Ticket(genUUID, randomNumbers);
             String numbersAsJson = gson.toJson(randomNumbers);
-            //System.out.println(Thread.currentThread().getName() + " Generated ticket UUID: " + genUUID);
-            //System.out.println("Random numbers (JSON): " + numbersAsJson);
+            System.out.println(Thread.currentThread().getName() + " Generated ticket UUID: " + genUUID);
+            System.out.println("Random numbers (JSON): " + numbersAsJson);
             ticketsRepository.addTicket(ticket, gson);
         }
     }

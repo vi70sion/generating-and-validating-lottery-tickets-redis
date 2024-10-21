@@ -184,6 +184,8 @@ public class Main {
     public static void playRunnable(RedisService redisService, Gson gson) {
         long startTime = System.nanoTime();
         int portionNumber = 5;
+        int[] luckyNumbers = Main.generateRandomNumbers();
+        System.out.println("Lucky numbers: " + Arrays.toString(luckyNumbers));
         Set<String> keys = redisService.getKeys();
         if (keys.isEmpty()) {
             System.out.println("No tickets found in Redis.");
@@ -208,7 +210,7 @@ public class Main {
         // Thread for each portion
         List<Thread> threads = new ArrayList<>();
         for (Set<String> keySubset : listOfSets) {
-            TicketsPlayRunnable checkTask = new TicketsPlayRunnable(redisService, gson, keySubset);
+            TicketsPlayRunnable checkTask = new TicketsPlayRunnable(redisService, gson, keySubset, luckyNumbers);
             Thread playRunnableThread = new Thread(checkTask);
             playRunnableThread.start();
             threads.add(playRunnableThread);
@@ -250,13 +252,13 @@ public class Main {
         System.out.println();
 
         TicketPlayMySQLRunnable checkMySQLTask1 = new TicketPlayMySQLRunnable(gson, luckyNumbers);
-        TicketPlayMySQLRunnable checkMySQLTask2 = new TicketPlayMySQLRunnable(gson, luckyNumbers);
+        //TicketPlayMySQLRunnable checkMySQLTask2 = new TicketPlayMySQLRunnable(gson, luckyNumbers);
         Thread playMySQLThread1 = new Thread(checkMySQLTask1);
-        Thread playMySQLThread2 = new Thread(checkMySQLTask2);
+        //Thread playMySQLThread2 = new Thread(checkMySQLTask2);
         playMySQLThread1.start();
-        playMySQLThread2.start();
+        //playMySQLThread2.start();
         playMySQLThread1.join();
-        playMySQLThread2.join();
+        //playMySQLThread2.join();
         System.out.println("Play with MySQL took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
     }
 
@@ -274,7 +276,7 @@ public class Main {
             System.out.println("Thread " + Thread.currentThread().getName() + " was interrupted.");
         }
         System.out.println("Generatig and saving to RabbitMQ took " + (System.nanoTime() - startTime) / 1000000000.0 + " seconds.");
-
+        rabbitMQService.close();
     }
 
 

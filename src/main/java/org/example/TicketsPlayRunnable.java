@@ -11,17 +11,17 @@ public class TicketsPlayRunnable implements Runnable{
     private final RedisService redisService;
     private final Gson gson;
     private final Set<String> keys;
+    private int[] luckyNumbers;
 
-    public TicketsPlayRunnable(RedisService redisService, Gson gson, Set<String> keys) {
+    public TicketsPlayRunnable(RedisService redisService, Gson gson, Set<String> keys, int[] luckyNumbers) {
         this.redisService = redisService;
         this.gson = gson;
         this.keys = keys;
+        this.luckyNumbers = luckyNumbers;
     }
 
     @Override
     public void run() {
-        int[] luckyNumbers = Main.generateRandomNumbers();
-        System.out.println("Lucky numbers: " + Arrays.toString(luckyNumbers));
         for (String key : keys) {
             String jsonTicket = redisService.get(key);
             if (jsonTicket != null) {
